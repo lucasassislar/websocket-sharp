@@ -59,7 +59,7 @@
     <GenerateDocumentation>true</GenerateDocumentation>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="doc/doc.sh" workingdir="doc/" externalConsole="true" />
+        <Command type="AfterBuild" command="doc/doc.sh" workingdir="doc/" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -136,7 +136,6 @@
     <Compile Include="WebSocketFrame.cs" />
     <Compile Include="Net\AuthenticationChallenge.cs" />
     <Compile Include="Net\AuthenticationResponse.cs" />
-    <Compile Include="Net\AuthenticationBase.cs" />
     <Compile Include="HttpBase.cs" />
     <Compile Include="HttpRequest.cs" />
     <Compile Include="HttpResponse.cs" />
