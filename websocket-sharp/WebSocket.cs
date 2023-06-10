@@ -158,7 +158,7 @@ namespace WebSocketSharp {
         #region Static Constructor
 
         static WebSocket() {
-            _maxRetryCountForConnect = 10;
+            _maxRetryCountForConnect = 1;
             EmptyBytes = new byte[0];
             FragmentLength = 1016;
             RandomNumber = new RNGCryptoServiceProvider();
@@ -1648,7 +1648,9 @@ namespace WebSocketSharp {
                 e = _messageEventQueue.Dequeue();
             }
 
-            _message.BeginInvoke(e, ar => _message.EndInvoke(ar), null);
+            ThreadPool.QueueUserWorkItem((s) => {
+                messages(e);
+            });
         }
 
         private bool ping(byte[] data) {
@@ -2261,41 +2263,35 @@ namespace WebSocketSharp {
                     continue;
                 }
 
-                canRead = false;
-                WebSocketFrame.ReadFrameAsync(
-                      _stream,
-                      false,
-                      frame => {
-                          bool shouldContinue = processReceivedFrame(frame)
-                               && _readyState != WebSocketState.Closed;
+                try {
+                    WebSocketFrame frame = WebSocketFrame.ReadFrame(_stream, false);
+                    bool shouldContinue = processReceivedFrame(frame)
+                         && _readyState != WebSocketState.Closed;
 
-                          if (!shouldContinue) {
-                              didExit = true;
-                              var exited = _receivingExited;
+                    if (!shouldContinue) {
+                        didExit = true;
+                        var exited = _receivingExited;
 
-                              if (exited != null) {
-                                  exited.Set();
-                              }
+                        if (exited != null) {
+                            exited.Set();
+                        }
 
-                              return;
-                          }
+                        return;
+                    }
 
-                          canRead = true;
-                          if (_inMessage) {
-                              return;
-                          }
+                    canRead = true;
+                    if (_inMessage) {
+                        continue;
+                    }
 
-                          message();
-                      },
-                      ex => {
-                          _log.Fatal(ex.Message);
-                          _log.Debug(ex.ToString());
+                    message();
+                } catch (Exception ex) {
+                    _log.Fatal(ex.Message);
+                    _log.Debug(ex.ToString());
 
-                          abort("An exception has occurred while receiving.", ex);
-                          canRead = true;
-
-                      }
-                    );
+                    abort("An exception has occurred while receiving.", ex);
+                    canRead = true;
+                }
             }
         }
 
